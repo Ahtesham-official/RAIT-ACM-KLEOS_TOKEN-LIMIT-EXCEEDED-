@@ -6,28 +6,73 @@ const topicSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-
-    quizScore: {
-      type: Number,
-      required: true,
+    description: { 
+      type: String,
+       required: true
+       },
+    questionText: {
+      type: String,
+      required: false,
     },
-
-    feynmanScore: {
-      type: Number,
-      required: true,
+    textQuestionText: {
+      type: String,
+      required: false,
     },
-
-    competencyScore: {
-      type: Number,
-      required: true,
+    feynmanQuestionText: {
+      type: String,
+      required: false,
     },
-
+studentAnswer : {
+  type: String,
+  default : null
+},
+textStudentAnswer : {
+  type: String,
+  default : null
+},
+feynmanStudentAnswer : {
+  type: String,
+  default : null
+},
+ feedback: {
+    type: String,
+    default: null
+},
+textFeedback: {
+    type: String,
+    default: null
+},
+feynmanFeedback: {
+    type: String,
+    default: null
+},
+  answerType: {
+    type: String,
+    enum: ["text", "audio"],
+    default: "text"
+},
+textScore: {
+    type: Number,
+    default: null
+},
+feynmanScore: {
+    type: Number,
+    default: null
+},
+averageScore: {
+    type: Number,
+    default: null
+},
+competencyScore: {
+    type: Number,
+    default: null
+},
     completed: {
       type: Boolean,
       default: false,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const progressSchema = new mongoose.Schema(
@@ -42,12 +87,12 @@ const progressSchema = new mongoose.Schema(
 
     capstoneScore: {
       type: Number,
-      default: 0,
+      default: null,
     },
 
     overallCompetency: {
       type: Number,
-      default: 0,
+      default: null,
     },
 
     topicsCompleted: {
@@ -67,7 +112,7 @@ const progressSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model("Progress", progressSchema);

@@ -2,8 +2,10 @@ const express = require('express');
 const app = express();
 const sessionRoutes = require("./Routes/sessionRoutes");
 const progressRoutes = require("./Routes/progressRoutes");
-const dashboardRoutes =  require("./Routes/dashboardRoutes");
-const topicRoutes =  require("./Routes/topicRoutes");
+const dashboardRoutes = require("./Routes/dashboardRoutes");
+const topicRoutes = require("./Routes/topicRoutes");
+const apiRoutes = require("./Routes/api.route.js");
+
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -14,6 +16,13 @@ app.use("/api/session", sessionRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/topics", topicRoutes);
+app.use("/api/ai", apiRoutes);
 
+const fs = require("fs");
+const Groq = require("groq-sdk");
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY
+});
 
 module.exports = app;

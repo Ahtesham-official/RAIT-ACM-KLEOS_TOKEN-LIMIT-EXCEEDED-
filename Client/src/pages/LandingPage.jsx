@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -15,6 +16,7 @@ import AuthModal from '../components/AuthModal';
 gsap.registerPlugin(ScrollTrigger);
 
 export default function LandingPage({ authView, setAuthView, showPassword, setShowPassword, theme, toggleTheme }) {
+  console.log("Supabase Connected:", supabase);
   const navigate = useNavigate();
   const containerRef = useRef(null);
   
@@ -68,6 +70,15 @@ export default function LandingPage({ authView, setAuthView, showPassword, setSh
     return () => clearInterval(interval);
   }, [isProcessing, videoUrl, navigate, pipelineSteps.length]);
 
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      document.documentElement.style.setProperty('--cursor-x', `${e.clientX}px`);
+      document.documentElement.style.setProperty('--cursor-y', `${e.clientY}px`);
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
   useGSAP(() => {
     const reveals = gsap.utils.toArray('.scroll-reveal');
     reveals.forEach((element) => {
@@ -95,8 +106,17 @@ export default function LandingPage({ authView, setAuthView, showPassword, setSh
         theme === 'dark' ? 'bg-slate-950 text-slate-100 selection:text-cyan-200' : 'bg-slate-50 text-slate-900 selection:text-cyan-900'
       }`}
     >
+      {/* Dynamic Cursor Aura follow glow */}
+      <div 
+        className="pointer-events-none fixed w-[600px] h-[600px] rounded-full bg-cyan-500/10 blur-[130px] transition-opacity duration-300 -translate-x-1/2 -translate-y-1/2 z-0 hidden md:block"
+        style={{
+          left: 'var(--cursor-x, -1000px)',
+          top: 'var(--cursor-y, -1000px)',
+        }}
+      />
+
       {/* Background Matrix Mesh Layer */}
-      <div className={`absolute inset-0 bg-[linear-gradient(to_right,var(--grid-color)_1px,transparent_1px),linear-gradient(to_bottom,var(--grid-color)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none`}
+      <div className={`absolute inset-0 bg-[linear-gradient(to_right,var(--grid-color)_1px,transparent_1px),linear-gradient(to_bottom,var(--grid-color)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none animate-grid-drift`}
         style={{ '--grid-color': theme === 'dark' ? '#0f172a' : '#e2e8f0' }}
       />
 
