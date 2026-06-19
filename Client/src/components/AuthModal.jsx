@@ -1,8 +1,53 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { supabase } from '../lib/supabase';
+
 import { FaArrowRightLong, FaRegEye, FaRegEyeSlash, FaGithub } from "react-icons/fa6";
 import { FcGoogle } from "react-icons/fc";
 
 export default function AuthModal({ authView, setAuthView, showPassword, setShowPassword }) {
+  const [email, setEmail] = useState('');
+const [password, setPassword] = useState('');
+const [fullName, setFullName] = useState('');
+const [loading, setLoading] = useState(false);
+const handleAuth = async () => {
+  try {
+    setLoading(true);
+
+    if (authView === "signup") {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      console.log(data);
+      alert("Account created successfully!");
+    } else {
+      const { data, error } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      console.log(data.user);
+      alert("Login successful!");
+      setAuthView(null);
+    }
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+};
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
       <div className="bg-white w-full max-w-md rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.2)] p-8 relative border border-gray-100 flex flex-col">
@@ -39,13 +84,27 @@ export default function AuthModal({ authView, setAuthView, showPassword, setShow
           {authView === 'signup' && (
             <div>
               <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5 pl-1">Full Name</label>
-              <input type="text" required placeholder="Alex Mercer" className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 outline-none focus:border-black transition-all bg-gray-50/50" />
+              <input
+  type="text"
+  required
+  placeholder="Alex Mercer"
+  value={fullName}
+  onChange={(e) => setFullName(e.target.value)}
+  className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 outline-none focus:border-black transition-all bg-gray-50/50"
+/>
             </div>
           )}
 
           <div>
             <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5 pl-1">Email Address</label>
-            <input type="email" required placeholder="you@example.com" className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 outline-none focus:border-black transition-all bg-gray-50/50" />
+           <input
+  type="email"
+  required
+  placeholder="you@example.com"
+  value={email}
+  onChange={(e) => setEmail(e.target.value)}
+  className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 outline-none focus:border-black transition-all bg-gray-50/50"
+/>
           </div>
 
           <div>
@@ -54,14 +113,23 @@ export default function AuthModal({ authView, setAuthView, showPassword, setShow
               {authView === 'login' && <a href="#" className="text-xs font-semibold text-gray-500 hover:text-black underline">Forgot?</a>}
             </div>
             <div className="relative">
-              <input type={showPassword ? "text" : "password"} required placeholder="••••••••" className="w-full h-12 px-4 pr-12 rounded-xl border-2 border-gray-200 outline-none focus:border-black transition-all bg-gray-50/50" />
+             <input
+  type={showPassword ? "text" : "password"}
+  required
+  placeholder="••••••••"
+  value={password}
+  onChange={(e) => setPassword(e.target.value)}
+  className="w-full h-12 px-4 pr-12 rounded-xl border-2 border-gray-200 outline-none focus:border-black transition-all bg-gray-50/50"
+/>
               <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-[32%] text-gray-400 hover:text-black cursor-pointer text-lg">
                 {showPassword ? <FaRegEyeSlash /> : <FaRegEye />}
               </button>
             </div>
           </div>
 
-          <button type="submit" className="w-full h-13 bg-black text-white rounded-xl font-bold text-base mt-6 hover:scale-[1.02] active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-black/10">
+          <button
+  type="button"
+  onClick={handleAuth} className="w-full h-13 bg-black text-white rounded-xl font-bold text-base mt-6 hover:scale-[1.02] active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-black/10">
             <span>{authView === 'login' ? 'Sign In' : 'Register Account'}</span>
             <FaArrowRightLong className="text-xs mt-0.5" />
           </button>

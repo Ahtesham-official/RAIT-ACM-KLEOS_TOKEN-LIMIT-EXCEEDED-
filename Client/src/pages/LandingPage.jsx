@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import UrlForm from '../components/UrlForm';
@@ -6,7 +7,9 @@ import Footer from '../components/Footer';
 import PipelineModal from '../components/PipelineModal';
 import AuthModal from '../components/AuthModal';
 
+
 export default function LandingPage({ authView, setAuthView, showPassword, setShowPassword }) {
+  console.log("Supabase Connected:", supabase);
   const navigate = useNavigate();
   const [videoUrl, setVideoUrl] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
