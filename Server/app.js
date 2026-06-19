@@ -1,6 +1,19 @@
 const express = require('express');
 const app = express();
+const sessionRoutes = require("./Routes/sessionRoutes");
+const progressRoutes = require("./Routes/progressRoutes");
+const dashboardRoutes =  require("./Routes/dashboardRoutes");
+const topicRoutes =  require("./Routes/topicRoutes");
+app.use(express.json());
 
-app.get('hello praxis');
+app.get("/", (req, res) => {
+    res.send("Hello Praxis");
+});
+
+app.use("/api/session", sessionRoutes);
+app.use("/api/progress", progressRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/topics", topicRoutes);
+
 
 module.exports = app;
