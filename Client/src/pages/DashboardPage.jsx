@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import Sidebar from '/src/components/dashboard/Sidebar.jsx';
 import Header from '/src/components/dashboard/Header.jsx';
 import MetricCards from '/src/components/dashboard/MetricCards.jsx';
@@ -7,6 +9,31 @@ import PerformanceChart from '/src/components/dashboard/PerformanceChart.jsx';
 import WatchTimeMetrics from '/src/components/dashboard/WatchTimeMetrics.jsx';
 
 export default function DashboardPage({ theme, toggleTheme }) {
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/'); // Redirect to landing page if not logged in
+      } else {
+        setUser(session.user);
+        setIsAuthenticated(true);
+      }
+      setIsLoading(false);
+    };
+    checkAuth();
+  }, [navigate]);
+
+  if (isLoading) {
+    return <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-slate-950 text-white' : 'bg-slate-50 text-black'}`}>Loading...</div>;
+  }
+
+  if (!isAuthenticated) return null;
+
   return (
     <div className={`min-h-screen flex w-full overflow-x-hidden relative transition-colors duration-500 ${
       theme === 'dark' ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
@@ -16,10 +43,10 @@ export default function DashboardPage({ theme, toggleTheme }) {
         style={{ '--grid-color': theme === 'dark' ? '#0f172a' : '#e2e8f0' }}
       />
 
-      <Sidebar theme={theme} />
+      <Sidebar theme={theme} user={user} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto p-6 lg:p-8 space-y-6 z-10">
-        <Header theme={theme} toggleTheme={toggleTheme} />
+        <Header theme={theme} toggleTheme={toggleTheme} user={user} />
         <MetricCards theme={theme} />
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch w-full min-w-0">

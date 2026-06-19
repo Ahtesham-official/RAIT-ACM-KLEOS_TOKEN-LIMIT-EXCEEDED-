@@ -1,9 +1,64 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { supabase } from '../lib/supabase';
 import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa6";
+import { useNavigate } from 'react-router-dom';
 
 export default function AuthModal({ authView, setAuthView, showPassword, setShowPassword, theme }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleAuth = async () => {
+    try {
+      setLoading(true);
+
+      if (authView === "signup") {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: fullName,
+            }
+          }
+        });
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        console.log(data);
+        alert("Account created successfully!");
+        setAuthView(null);
+        navigate('/dashboard');
+      } else {
+        const { data, error } =
+          await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        console.log(data.user);
+        alert("Login successful!");
+        setAuthView(null);
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
       <div className={`w-full max-w-md rounded-3xl p-8 relative border flex flex-col shadow-2xl transition-colors duration-500 ${
@@ -46,17 +101,31 @@ export default function AuthModal({ authView, setAuthView, showPassword, setShow
           {authView === 'signup' && (
             <div>
               <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 pl-1 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>Full Name</label>
-              <input type="text" required placeholder="Alex Mercer" className={`w-full h-12 px-4 rounded-xl border outline-none transition-all ${
-                theme === 'dark' ? 'border-slate-800 bg-slate-950/50 text-white focus:border-cyan-500' : 'border-slate-200 bg-slate-50 text-black focus:border-black'
-              }`} />
+              <input 
+                type="text" 
+                required 
+                placeholder="Alex Mercer" 
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className={`w-full h-12 px-4 rounded-xl border outline-none transition-all ${
+                  theme === 'dark' ? 'border-slate-800 bg-slate-950/50 text-white focus:border-cyan-500' : 'border-slate-200 bg-slate-50 text-black focus:border-black'
+                }`} 
+              />
             </div>
           )}
 
           <div>
             <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 pl-1 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>Email Address</label>
-            <input type="email" required placeholder="you@example.com" className={`w-full h-12 px-4 rounded-xl border outline-none transition-all ${
-              theme === 'dark' ? 'border-slate-800 bg-slate-950/50 text-white focus:border-cyan-500' : 'border-slate-200 bg-slate-50 text-black focus:border-black'
-            }`} />
+            <input 
+              type="email" 
+              required 
+              placeholder="you@example.com" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={`w-full h-12 px-4 rounded-xl border outline-none transition-all ${
+                theme === 'dark' ? 'border-slate-800 bg-slate-950/50 text-white focus:border-cyan-500' : 'border-slate-200 bg-slate-50 text-black focus:border-black'
+              }`} 
+            />
           </div>
 
           <div>
@@ -65,18 +134,30 @@ export default function AuthModal({ authView, setAuthView, showPassword, setShow
               {authView === 'login' && <a href="#" className="text-xs font-semibold text-slate-400 hover:text-cyan-400 underline">Forgot?</a>}
             </div>
             <div className="relative">
-              <input type={showPassword ? "text" : "password"} required placeholder="••••••••" className={`w-full h-12 px-4 pr-12 rounded-xl border outline-none transition-all ${
-                theme === 'dark' ? 'border-slate-800 bg-slate-950/50 text-white focus:border-cyan-500' : 'border-slate-200 bg-slate-50 text-black focus:border-black'
-              }`} />
+              <input 
+                type={showPassword ? "text" : "password"} 
+                required 
+                placeholder="••••••••" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={`w-full h-12 px-4 pr-12 rounded-xl border outline-none transition-all ${
+                  theme === 'dark' ? 'border-slate-800 bg-slate-950/50 text-white focus:border-cyan-500' : 'border-slate-200 bg-slate-50 text-black focus:border-black'
+                }`} 
+              />
               <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-[32%] text-slate-400 hover:text-cyan-400 cursor-pointer text-lg">
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
           </div>
 
-          <button type="submit" className={`w-full h-13 rounded-xl font-bold text-base mt-6 hover:scale-[1.02] active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg ${
-            theme === 'dark' ? 'bg-white text-black hover:bg-cyan-400 shadow-white/5' : 'bg-black text-white hover:bg-slate-800 shadow-black/15'
-          }`}>
+          <button 
+            type="button" 
+            onClick={handleAuth} 
+            disabled={loading}
+            className={`w-full h-13 rounded-xl font-bold text-base mt-6 hover:scale-[1.02] active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 ${
+              theme === 'dark' ? 'bg-white text-black hover:bg-cyan-400 shadow-white/5' : 'bg-black text-white hover:bg-slate-800 shadow-black/15'
+            }`}
+          >
             <span>{authView === 'login' ? 'Sign In' : 'Register Account'}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
