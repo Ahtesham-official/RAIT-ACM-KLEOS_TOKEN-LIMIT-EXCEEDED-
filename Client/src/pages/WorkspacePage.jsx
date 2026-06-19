@@ -1,19 +1,26 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 export default function WorkspacePage() {
   const { videoId } = useParams();
+  const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-8">
-      <h1 className="text-4xl font-bold mb-4">Workspace</h1>
-      <p className="text-xl text-gray-400">
-        You are currently viewing the workspace for Video ID: <span className="text-teal-400 font-mono">{videoId}</span>
-      </p>
-      <div className="mt-8 p-6 bg-gray-800 rounded-lg shadow-lg border border-gray-700 max-w-2xl text-center">
-        <p className="text-gray-300">
-          This is a placeholder for the Workspace Page. The backend features we implemented (dual scoring, Feynman techique, text evaluation) will be integrated here soon!
-        </p>
+    <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6">
+      <div className="max-w-md w-full bg-slate-800 rounded-3xl p-8 border border-slate-700 text-center shadow-2xl">
+        <h1 className="text-3xl font-extrabold mb-2 tracking-tight">Workspace Engine</h1>
+        <p className="text-slate-400 text-sm mb-6 font-mono">Video ID: {videoId}</p>
+        
+        <div className="aspect-video w-full bg-black rounded-2xl mb-6 flex items-center justify-center text-slate-600 font-medium border border-slate-800">
+          [ YouTube Player Placeholder ]
+        </div>
+
+        <button 
+          onClick={() => navigate('/')}
+          className="w-full h-12 bg-white text-black font-bold rounded-xl hover:scale-[1.02] active:scale-98 transition-all cursor-pointer"
+        >
+          Back to Landing
+        </button>
       </div>
     </div>
   );
