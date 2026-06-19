@@ -2,60 +2,42 @@ const Progress = require("../Models/Progress");
 
 const createProgress = async (req, res) => {
   try {
-    const {
-      sessionId,
-      topics,
-      capstoneScore = 0,
-    } = req.body;
+    const { sessionId, topics } = req.body;
 
-    const existingProgress = await Progress.findOne({
-  sessionId,
-});
+    const existingProgress = await Progress.findOne({ sessionId });
 
-if (existingProgress) {
-  return res.status(400).json({
-    success: false,
-    message: "Progress already exists for this session",
-  });
-}
+    if (existingProgress) {
+      return res.status(400).json({
+        success: false,
+        message: "Progress already exists for this session",
+      });
+    }
 
-    const processedTopics = topics.map((topic) => {
-      const competencyScore = Math.round(
-        topic.quizScore * 0.5 +
-        topic.feynmanScore * 0.5
-      );
-
-      return {
-        ...topic,
-        competencyScore,
-      };
-    });
-
-    const topicsCompleted = processedTopics.filter(
-      (topic) => topic.completed
-    ).length;
-
-    const totalTopics = processedTopics.length;
-
-    const averageTopicCompetency =
-      processedTopics.reduce(
-        (sum, topic) => sum + topic.competencyScore,
-        0
-      ) / totalTopics;
-
-    const overallCompetency = Math.round(
-      averageTopicCompetency * 0.5 +
-      capstoneScore * 0.5
-    );
+    // topics arrive WITHOUT scores yet — student hasn't answered anything
+    const initialTopics = topics.map((topic) => ({
+      topicName: topic.topicName,
+      description: topic.description,
+      textQuestionText: topic.textQuestionText || topic.questionText, // fallback
+      feynmanQuestionText: topic.feynmanQuestionText || null,
+      textStudentAnswer: null,
+      feynmanStudentAnswer: null,
+      textScore: null,
+      feynmanScore: null,
+      averageScore: null,
+      competencyScore: null,
+      textFeedback: null,
+      feynmanFeedback: null,
+      completed: false,
+    }));
 
     const progress = await Progress.create({
       sessionId,
-      topics: processedTopics,
-      capstoneScore,
-      overallCompetency,
-      topicsCompleted,
-      totalTopics,
-      completed: topicsCompleted === totalTopics,
+      topics: initialTopics,
+      capstoneScore: null,
+      overallCompetency: null,
+      topicsCompleted: 0,
+      totalTopics: initialTopics.length,
+      completed: false,
     });
 
     res.status(201).json({

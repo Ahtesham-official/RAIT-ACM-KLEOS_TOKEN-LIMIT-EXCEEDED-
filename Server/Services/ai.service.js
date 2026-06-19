@@ -64,6 +64,38 @@ Respond with ONLY a valid JSON object. Do not include markdown formatting, code 
 {"score": number, "feedback": "string"}`;
 }
 
+function buildFeynmanChallengeGenerationPrompt(topicTitle, topicDescription) {
+  return `You are a patient technical mentor.
+Based on the topic below, write ONE Feynman-technique prompt that asks the learner to explain the concept in extremely simple, jargon-free terms, as if they were explaining it to a 10-year-old or a complete beginner.
+
+Topic Title: ${topicTitle}
+Topic Context: ${topicDescription}
+
+Respond with ONLY a valid JSON object. Do not include markdown formatting, code fences, or explanatory text. Use exactly this structure:
+{"questionText": "string"}`;
+}
+
+function buildFeynmanEvaluationPrompt(topicTitle, topicDescription, questionText, studentAnswer) {
+  return `You are an expert educator evaluating a learner's explanation using the Feynman Technique.
+The goal of the Feynman Technique is to explain a concept in simple, clear, and jargon-free language as if explaining it to a beginner or a 10-year-old child.
+
+Topic: ${topicTitle}
+Topic Context: ${topicDescription}
+Feynman Prompt: ${questionText}
+Learner's Explanation: ${studentAnswer}
+
+Score the explanation from 0 to 100 based on this Feynman Technique rubric:
+- 90-100: Excellent simple explanation. Uses simple analogies or plain English, completely avoids jargon, and captures the core concept accurately.
+- 70-89: Good explanation, but uses some minor technical terms or could be simplified further.
+- 40-69: Shaky explanation. Uses too much jargon, or the explanation is too complex for a beginner to understand.
+- 0-39: Very poor or incorrect explanation, or is not simplified at all.
+
+Also write brief feedback (1-2 sentences) explaining the score and how they can simplify it further, addressed directly to the learner.
+
+Respond with ONLY a valid JSON object. Do not include markdown formatting, code fences, or explanatory text. Use exactly this structure:
+{"score": number, "feedback": "string"}`;
+}
+
 async function generateTopics(transcriptText) {
   const prompt = buildTopicGenerationPrompt(transcriptText);
   
@@ -91,15 +123,31 @@ async function generateChallenge(topicTitle, topicDescription) {
   return challenge.questionText;
 }
 
+async function generateFeynmanChallenge(topicTitle, topicDescription) {
+  const prompt = buildFeynmanChallengeGenerationPrompt(topicTitle, topicDescription);
+
+  const completion = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    messages: [{ role: "user", content: prompt }],
+  });
+
+  const rawText = completion.choices[0].message.content;
+  const challenge = cleanAndParseJSON(rawText);
+
+  return challenge.questionText;
+}
+
 async function generateChallengesForTopics(topics) {
   const topicsWithChallenges = [];
 
   for (const topic of topics) {
-    const questionText = await generateChallenge(topic.title, topic.description);
+    const textQuestionText = await generateChallenge(topic.title, topic.description);
+    const feynmanQuestionText = await generateFeynmanChallenge(topic.title, topic.description);
 
     topicsWithChallenges.push({
       ...topic,
-      questionText,
+      textQuestionText,
+      feynmanQuestionText,
     });
   }
 
@@ -118,4 +166,19 @@ async function evaluateAnswer(topicTitle, topicDescription, questionText, studen
 
   return result;
 }
-module.exports = { generateTopics, generateChallenge, generateChallengesForTopics , evaluateAnswer };
+
+async function evaluateFeynmanAnswer(topicTitle, topicDescription, questionText, studentAnswer) {
+  const prompt = buildFeynmanEvaluationPrompt(topicTitle, topicDescription, questionText, studentAnswer);
+
+  const completion = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    messages: [{ role: "user", content: prompt }],
+  });
+
+  const rawText = completion.choices[0].message.content;
+  const result = cleanAndParseJSON(rawText);
+
+  return result;
+}
+
+module.exports = { generateTopics, generateChallenge, generateFeynmanChallenge, generateChallengesForTopics, evaluateAnswer, evaluateFeynmanAnswer };
