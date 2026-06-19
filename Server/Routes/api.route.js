@@ -1,4 +1,5 @@
 const router = require('express').router();
 
-router.post('/api/data' , (req , res) => {
+router.post('/test-ai' , (req , res) => {
+      ;
 })
