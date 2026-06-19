@@ -1,16 +1,28 @@
 const express = require('express');
 const app = express();
+const sessionRoutes = require("./Routes/sessionRoutes");
+const progressRoutes = require("./Routes/progressRoutes");
+const dashboardRoutes = require("./Routes/dashboardRoutes");
+const topicRoutes = require("./Routes/topicRoutes");
+const apiRoutes = require("./Routes/api.route.js");
 
-app.get("/" , (req , res) => {
-  res.send('Hello Praxis'); 
+app.use(express.json());
+
+app.get("/", (req, res) => {
+    res.send("Hello Praxis");
 });
 
-const ai = require("./Config/gemini.config.js");
-const { getTranscriptFromYouTube } = require("./Services/transcript.service.js");
+app.use("/api/session", sessionRoutes);
+app.use("/api/progress", progressRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/topics", topicRoutes);
+app.use("/api/ai", apiRoutes);
 
-(async () => {
-  const text = await getTranscriptFromYouTube("https://www.youtube.com/watch?v=SOME_REAL_VIDEO_ID");
-  console.log(text.slice(0, 500)); // print first 500 chars to sanity check
-})();
+const fs = require("fs");
+const Groq = require("groq-sdk");
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY
+});
 
 module.exports = app;

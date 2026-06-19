@@ -1,10 +1,13 @@
-require('dotenv').config();
-const app  = require('./app.js');
+const express = require('express');
+require("dotenv").config();
+
+const app = require("./app.js");
+const connectDB = require("./DB/db");
+
 const PORT = process.env.PORT || 8000;
 
-const groq = require("./Config/groq.config.js");
+connectDB();
 
-
-app.listen(PORT , () => {
+app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}/`);
-})
+});
