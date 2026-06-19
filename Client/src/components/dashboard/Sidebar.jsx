@@ -1,7 +1,22 @@
 import React from 'react';
 import { LayoutDashboard, LogOut } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { useNavigate } from 'react-router-dom';
 
-export default function Sidebar({ theme }) {
+export default function Sidebar({ theme, user }) {
+  const navigate = useNavigate();
+  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Guest';
+  const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/');
+    } catch (err) {
+      console.error('Error logging out:', err);
+    }
+  };
+
   return (
     <aside className={`w-64 h-screen sticky top-0 hidden md:flex flex-col justify-between p-6 border-r transition-colors duration-500 ${
       theme === 'dark' ? 'bg-slate-900/40 border-slate-900' : 'bg-white border-slate-200/60'
@@ -32,14 +47,14 @@ export default function Sidebar({ theme }) {
       }`}>
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-full bg-violet-600 text-white flex items-center justify-center font-bold text-sm">
-            RV
+            {initials}
           </div>
           <div>
-            <h4 className="text-xs font-bold leading-tight">Rohan Verma</h4>
+            <h4 className="text-xs font-bold leading-tight">{userName}</h4>
             <span className="text-[10px] text-slate-500 font-medium">View Profile</span>
           </div>
         </div>
-        <button className="text-slate-400 hover:text-red-500 transition-colors cursor-pointer">
+        <button onClick={handleLogout} className="text-slate-400 hover:text-red-500 transition-colors cursor-pointer">
           <LogOut className="w-4 h-4" />
         </button>
       </div>

@@ -3,12 +3,14 @@ import { supabase } from '../lib/supabase';
 import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa6";
+import { useNavigate } from 'react-router-dom';
 
 export default function AuthModal({ authView, setAuthView, showPassword, setShowPassword, theme }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleAuth = async () => {
     try {
@@ -18,6 +20,11 @@ export default function AuthModal({ authView, setAuthView, showPassword, setShow
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              full_name: fullName,
+            }
+          }
         });
 
         if (error) {
@@ -27,6 +34,8 @@ export default function AuthModal({ authView, setAuthView, showPassword, setShow
 
         console.log(data);
         alert("Account created successfully!");
+        setAuthView(null);
+        navigate('/dashboard');
       } else {
         const { data, error } =
           await supabase.auth.signInWithPassword({
@@ -42,6 +51,7 @@ export default function AuthModal({ authView, setAuthView, showPassword, setShow
         console.log(data.user);
         alert("Login successful!");
         setAuthView(null);
+        navigate('/dashboard');
       }
     } catch (err) {
       console.error(err);

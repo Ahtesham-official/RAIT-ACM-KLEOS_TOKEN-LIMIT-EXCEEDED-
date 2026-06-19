@@ -1,7 +1,9 @@
 import React from 'react';
 import { Calendar, Sun, Moon } from 'lucide-react';
 
-export default function Header({ theme, toggleTheme }) {
+export default function Header({ theme, toggleTheme, user }) {
+  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Guest';
+
   // Dynamically derive and format the current real-time date
   const formattedDate = new Intl.DateTimeFormat('en-US', {
     month: 'short',
@@ -13,7 +15,7 @@ export default function Header({ theme, toggleTheme }) {
     <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full">
       <div>
         <h1 className="text-3xl font-black tracking-tight flex items-center gap-2">
-          Welcome back, Rohan! <span className="animate-bounce">👋</span>
+          Welcome back, {userName}! <span className="animate-bounce">👋</span>
         </h1>
         <p className={`text-sm font-medium mt-0.5 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
           Keep learning, keep growing.
