@@ -1,4 +1,4 @@
-const Progress = require("../Models/Progress");
+const Progress = require("../Models/progress");
 const Session = require("../Models/Session");
 
 const getDashboard = async (req, res) => {

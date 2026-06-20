@@ -1,4 +1,4 @@
-const Progress = require("../Models/Progress");
+const Progress = require("../Models/progress");
 
 const getTopicsBySession = async (req, res) => {
   try {

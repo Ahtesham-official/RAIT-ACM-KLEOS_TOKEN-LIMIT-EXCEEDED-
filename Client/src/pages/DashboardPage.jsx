@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import Sidebar from '/src/components/dashboard/Sidebar.jsx';
-import Header from '/src/components/dashboard/Header.jsx';
-import MetricCards from '/src/components/dashboard/MetricCards.jsx';
-import WatchedVideos from '/src/components/dashboard/WatchedVideos.jsx';
-import PerformanceChart from '/src/components/dashboard/PerformanceChart.jsx';
-import WatchTimeMetrics from '/src/components/dashboard/WatchTimeMetrics.jsx';
+import Sidebar from '../components/dashboard/Sidebar.jsx';
+import Header from '../components/dashboard/Header.jsx';
+import MetricCards from '../components/dashboard/MetricCards.jsx';
+import WatchedVideos from '../components/dashboard/WatchedVideos.jsx';
+import PerformanceChart from '../components/dashboard/PerformanceChart.jsx';
+import WatchTimeMetrics from '../components/dashboard/WatchTimeMetrics.jsx';
 import PipelineModal from '../components/PipelineModal';
 
 export default function DashboardPage({ theme, toggleTheme }) {
@@ -20,7 +20,7 @@ export default function DashboardPage({ theme, toggleTheme }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const backendReadyRef = useRef(false);
-  const derivedIdRef = useRef('');
+  const derivedIdRef = useRef(''); 
 
   const pipelineSteps = [
     "Triggering YouTube iFrame API...",
@@ -78,7 +78,6 @@ export default function DashboardPage({ theme, toggleTheme }) {
         const { data } = await supabase.auth.getSession();
         return data?.session?.user?.id || 'anonymous';
       };
-
       getUserId().then(userId => {
         fetch('/api/ai/generate', {
           method: 'POST',

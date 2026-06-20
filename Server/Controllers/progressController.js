@@ -1,4 +1,4 @@
-const Progress = require("../Models/Progress");
+const Progress = require("../Models/progress");
 
 const createProgress = async (req, res) => {
   try {
@@ -17,7 +17,7 @@ const createProgress = async (req, res) => {
     const initialTopics = topics.map((topic) => ({
       topicName: topic.topicName,
       description: topic.description,
-      textQuestionText: topic.textQuestionText || topic.questionText, // fallback
+      textQuestionText: topic.textQuestionText || null,
       feynmanQuestionText: topic.feynmanQuestionText || null,
       textStudentAnswer: null,
       feynmanStudentAnswer: null,

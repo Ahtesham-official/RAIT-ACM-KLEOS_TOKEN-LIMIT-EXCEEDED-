@@ -10,10 +10,6 @@ const topicSchema = new mongoose.Schema(
       type: String,
        required: true
        },
-    questionText: {
-      type: String,
-      required: false,
-    },
     textQuestionText: {
       type: String,
       required: false,
@@ -22,10 +18,6 @@ const topicSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
-studentAnswer : {
-  type: String,
-  default : null
-},
 textStudentAnswer : {
   type: String,
   default : null
@@ -34,10 +26,6 @@ feynmanStudentAnswer : {
   type: String,
   default : null
 },
- feedback: {
-    type: String,
-    default: null
-},
 textFeedback: {
     type: String,
     default: null
@@ -45,11 +33,6 @@ textFeedback: {
 feynmanFeedback: {
     type: String,
     default: null
-},
-  answerType: {
-    type: String,
-    enum: ["text", "audio"],
-    default: "text"
 },
 textScore: {
     type: Number,
@@ -118,4 +101,4 @@ const progressSchema = new mongoose.Schema(
   },
 );
 
-module.exports = mongoose.model("Progress", progressSchema);
+module.exports = mongoose.models.Progress || mongoose.model("Progress", progressSchema);

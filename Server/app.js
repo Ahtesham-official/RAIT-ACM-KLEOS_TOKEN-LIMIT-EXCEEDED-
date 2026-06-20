@@ -20,11 +20,4 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/topics", topicRoutes);
 app.use("/api/ai", apiRoutes);
 
-const fs = require("fs");
-const Groq = require("groq-sdk");
-
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY
-});
-
 module.exports = app;

@@ -72,6 +72,25 @@ export default function WorkspacePage({ theme }) {
   const trackerRef = useRef(null);
   const recognitionRef = useRef(null);
 
+  // Reset all workspace states on videoId change
+  useEffect(() => {
+    setPlayerReady(false);
+    setMilestones([]);
+    setVideoPlaying(false);
+    setCurrentTimeState(0);
+    setDuration(0);
+    setLocked(false);
+    setLockedMilestoneIndex(-1);
+    setCompletedMilestones([]);
+    setCurrentQuestionIndex(0);
+    setTextInput("");
+    setVoiceInput("");
+    setTextError("");
+    setVoiceError("");
+    setSuccessMsg("");
+    setBackendTopics([]);
+  }, [videoId]);
+
   // Fetch backend topics
   useEffect(() => {
     fetch(`/api/progress/${videoId}`)
@@ -591,7 +610,7 @@ export default function WorkspacePage({ theme }) {
                     {textError && (
                       <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[10px] font-bold flex items-start gap-2">
                         <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        <span>{textError} (Hint: {milestones[lockedMilestoneIndex].hint})</span>
+                        <span>{textError} (Hint: {milestones[lockedMilestoneIndex].questions[currentQuestionIndex].hint})</span>
                       </div>
                     )}
 

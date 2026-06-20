@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, CheckCircle2, ArrowRight, Code, BookOpen, Layers } from 'lucide-react';
 
-const watchedTutorials = [
+const watchedTutorialsMock = [
   {
     id: "py-cli",
     title: "Python for Beginners",
@@ -82,9 +82,31 @@ const watchedTutorials = [
 ];
 
 export default function WatchedVideos({ theme, dashboardData }) {
-  const watchedTutorials = dashboardData?.recentSessions || [];
-  const [selectedId, setSelectedId] = useState(watchedTutorials.length > 0 ? watchedTutorials[0].id : null);
   const navigate = useNavigate();
+  const rawSessions = dashboardData?.recentSessions || [];
+
+  // Merge static metadata (emojis, tasks) with dynamic backend session progress
+  const watchedTutorials = rawSessions.map((session) => {
+    const staticInfo = watchedTutorialsMock.find((t) => t.id === session.videoId);
+    return {
+      ...session,
+      emoji: staticInfo ? staticInfo.emoji : "💻",
+      tasks: staticInfo ? staticInfo.capstone.tasks : [
+        "Complete the quiz checkpoint questions",
+        "Submit all topic explanations",
+        "Improve your overall competency"
+      ]
+    };
+  });
+
+  const [selectedId, setSelectedId] = React.useState(null);
+
+  // Auto-select first tutorial when list loads
+  React.useEffect(() => {
+    if (watchedTutorials.length > 0 && !selectedId) {
+      setSelectedId(watchedTutorials[0].id);
+    }
+  }, [watchedTutorials, selectedId]);
 
   const activeTutorial = watchedTutorials.find(t => t.id === selectedId);
 
