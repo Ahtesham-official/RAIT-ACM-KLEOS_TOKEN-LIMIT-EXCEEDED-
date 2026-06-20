@@ -35,61 +35,7 @@ const getVideoConfig = (id) => {
   return { ytId, title, category };
 };
 
-const generateMilestones = (duration, category) => {
-  const interval = 900; // 15 minutes in seconds
-  const milestones = [];
-  
-  const textPool = [
-    {
-      question: category === "python" ? "Which keyword is used in Python to define a function? (e.g. 'def', 'func')" : category === "dsa" ? "What is the worst-case time complexity of searching in a standard unbalanced Binary Search Tree? (e.g. 'O(n)', 'O(log n)')" : category === "react" ? "Which React hook is used to handle side-effects like fetching data? (e.g. 'useEffect')" : category === "postgres" ? "What command is used to retrieve data from a PostgreSQL database? (e.g. 'SELECT')" : "What is the name of our project workspace? (Hint: 'Praxis')",
-      answer: category === "python" ? "def" : category === "dsa" ? "o(n)" : category === "react" ? "useeffect" : category === "postgres" ? "select" : "praxis",
-      hint: "Check your spelling and lowercase formatting."
-    },
-    {
-      question: category === "python" ? "What data type is used to store multiple items in a single variable? (e.g. 'list', 'tuple')" : category === "dsa" ? "Which traversal visits the root node first? (e.g. 'preorder')" : category === "react" ? "What do you call a component that maintains its own data? (e.g. 'stateful')" : category === "postgres" ? "What keyword is used to filter records? (e.g. 'WHERE')" : "What language runs in the browser? (e.g. 'javascript')",
-      answer: category === "python" ? "list" : category === "dsa" ? "preorder" : category === "react" ? "stateful" : category === "postgres" ? "where" : "javascript",
-      hint: "Keep it simple and lowercase."
-    }
-  ];
 
-  const voicePool = [
-    {
-      question: category === "python" ? "Explain in voice why mutable types (like lists) should be handled carefully as function default arguments." : category === "dsa" ? "Explain in voice why balancing a binary search tree is important for traversal speed." : category === "react" ? "Explain in voice what the dependencies array in the useEffect hook is used for." : category === "postgres" ? "Explain in voice what primary keys are used for in tables." : "Explain in voice why you want to learn programming today.",
-      keywords: category === "python" ? ["reference", "mutable", "share", "list", "change", "default"] : category === "dsa" ? ["performance", "search", "height", "speed", "log", "balance"] : category === "react" ? ["change", "run", "effect", "trigger", "state", "dependency"] : category === "postgres" ? ["unique", "reference", "table", "relation", "link", "key"] : ["build", "project", "code", "learn", "app"],
-      hint: "Include key terms in your speech. Speak clearly near your mic."
-    },
-    {
-      question: category === "python" ? "Explain the difference between a list and a dictionary in Python." : category === "dsa" ? "Explain how a queue differs from a stack." : category === "react" ? "Explain what JSX is in React." : category === "postgres" ? "Explain what a JOIN operation does." : "Explain what debugging means.",
-      keywords: category === "python" ? ["key", "value", "index", "order", "map"] : category === "dsa" ? ["fifo", "lifo", "first", "last", "order", "queue", "stack"] : category === "react" ? ["html", "javascript", "syntax", "element", "render"] : category === "postgres" ? ["combine", "table", "row", "match", "foreign"] : ["fix", "error", "bug", "find", "code"],
-      hint: "Explain the key differences or purposes."
-    }
-  ];
-
-  let numCheckpoints = Math.floor(duration / interval);
-  if (numCheckpoints === 0 && duration > 0) {
-    milestones.push({
-      time: Math.floor(duration / 2),
-      questions: [
-        { type: "text", ...textPool[0] },
-        { type: "voice", ...voicePool[0] }
-      ]
-    });
-  } else {
-    for (let i = 1; i <= numCheckpoints; i++) {
-      const qs = [
-        { type: "text", ...(textPool[(i-1) % textPool.length]) },
-        { type: "voice", ...(voicePool[(i-1) % voicePool.length]) },
-        { type: "text", ...(textPool[i % textPool.length]) }
-      ];
-      milestones.push({
-        time: i * interval,
-        questions: qs
-      });
-    }
-  }
-
-  return milestones;
-};
 
 export default function WorkspacePage({ theme }) {
   const { videoId } = useParams();
@@ -120,9 +66,64 @@ export default function WorkspacePage({ theme }) {
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(true);
 
+  const [backendTopics, setBackendTopics] = useState([]);
+
   const playerRef = useRef(null);
   const trackerRef = useRef(null);
   const recognitionRef = useRef(null);
+
+  // Fetch backend topics
+  useEffect(() => {
+    fetch(`/api/progress/${videoId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data && data.data.topics) {
+          setBackendTopics(data.data.topics);
+        }
+      })
+      .catch(err => console.error("Failed to fetch topics:", err));
+  }, [videoId]);
+
+  // Generate dynamic milestones based on backend topics
+  useEffect(() => {
+    if (playerReady && duration > 0 && milestones.length === 0 && backendTopics.length > 0) {
+      const intervalSec = 900;
+      const newMilestones = [];
+      let currentMs = intervalSec;
+      let index = 0;
+
+      while (currentMs < duration) {
+        const topic = backendTopics[index % backendTopics.length];
+        if (!topic) break;
+
+        newMilestones.push({
+          time: currentMs,
+          topicName: topic.topicName,
+          questions: [
+            { type: 'text', question: topic.textQuestionText || topic.description, hint: topic.description },
+            { type: 'voice', question: topic.feynmanQuestionText || topic.description, hint: topic.description }
+          ]
+        });
+        currentMs += intervalSec;
+        index++;
+      }
+
+      if (newMilestones.length === 0 && duration > 10) {
+        const topic = backendTopics[0];
+        if (topic) {
+          newMilestones.push({
+            time: Math.floor(duration / 2),
+            topicName: topic.topicName,
+            questions: [
+              { type: 'text', question: topic.textQuestionText || topic.description, hint: topic.description },
+              { type: 'voice', question: topic.feynmanQuestionText || topic.description, hint: topic.description }
+            ]
+          });
+        }
+      }
+      setMilestones(newMilestones);
+    }
+  }, [playerReady, duration, milestones.length, backendTopics]);
 
   // Load YouTube IFrame API script
   useEffect(() => {
@@ -171,14 +172,14 @@ export default function WorkspacePage({ theme }) {
         controls: 1,
         rel: 0,
         modestbranding: 1,
-        disablekb: 1
+        disablekb: 1,
+        origin: window.location.origin
       },
       events: {
         onReady: (event) => {
           setPlayerReady(true);
           const dur = event.target.getDuration() || 300;
           setDuration(dur);
-          setMilestones(generateMilestones(dur, category));
         },
         onStateChange: (event) => {
           // Play state: 1 (Playing)
@@ -290,28 +291,45 @@ export default function WorkspacePage({ theme }) {
     const currentQ = activeM.questions[currentQuestionIndex];
 
     const normalizedInput = textInput.toLowerCase().trim();
-    if (normalizedInput === currentQ.answer) {
-      setSuccessMsg("Correct answer!");
-      setTimeout(() => {
-        if (currentQuestionIndex + 1 < activeM.questions.length) {
-          setCurrentQuestionIndex(prev => prev + 1);
-          setTextInput("");
-          setSuccessMsg("");
-        } else {
-          setCompletedMilestones(prev => [...prev, lockedMilestoneIndex]);
-          setLocked(false);
-          setLockedMilestoneIndex(-1);
-          setCurrentQuestionIndex(0);
-          setTextInput("");
-          setSuccessMsg("");
-          if (playerRef.current && typeof playerRef.current.playVideo === 'function') {
-            playerRef.current.playVideo();
-          }
-        }
-      }, 1500);
-    } else {
-      setTextError("Incorrect answer. Please read the hint and try again.");
+    if (!normalizedInput) {
+      setTextError("Please enter an answer.");
+      return;
     }
+
+    fetch(`/api/ai/${videoId}/topics/${encodeURIComponent(activeM.topicName)}/answer`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ studentAnswer: normalizedInput, questionType: 'text' })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success && data.score >= 50) {
+        setSuccessMsg(`Correct! Score: ${data.score}/100. ${data.feedback}`);
+        setTimeout(() => {
+          if (currentQuestionIndex + 1 < activeM.questions.length) {
+            setCurrentQuestionIndex(prev => prev + 1);
+            setTextInput("");
+            setSuccessMsg("");
+          } else {
+            setCompletedMilestones(prev => [...prev, lockedMilestoneIndex]);
+            setLocked(false);
+            setLockedMilestoneIndex(-1);
+            setCurrentQuestionIndex(0);
+            setTextInput("");
+            setSuccessMsg("");
+            if (playerRef.current && typeof playerRef.current.playVideo === 'function') {
+              playerRef.current.playVideo();
+            }
+          }
+        }, 3000);
+      } else {
+        setTextError(`Needs improvement (Score: ${data?.score || 0}/100). ${data?.feedback || 'Try again.'}`);
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      setTextError("Network error. Please try again.");
+    });
   };
 
   const submitVoiceAnswer = () => {
@@ -333,32 +351,40 @@ export default function WorkspacePage({ theme }) {
       return;
     }
 
-    // Verify key terms
-    const matchedKeywords = currentQ.keywords.filter(keyword => normalizedInput.includes(keyword));
-    const isPass = matchedKeywords.length >= 1; // Require at least one matches to pass
-
-    if (isPass) {
-      setSuccessMsg(`Answer accepted (Matched key terms: ${matchedKeywords.join(", ")}).`);
-      setTimeout(() => {
-        if (currentQuestionIndex + 1 < activeM.questions.length) {
-          setCurrentQuestionIndex(prev => prev + 1);
-          setVoiceInput("");
-          setSuccessMsg("");
-        } else {
-          setCompletedMilestones(prev => [...prev, lockedMilestoneIndex]);
-          setLocked(false);
-          setLockedMilestoneIndex(-1);
-          setCurrentQuestionIndex(0);
-          setVoiceInput("");
-          setSuccessMsg("");
-          if (playerRef.current && typeof playerRef.current.playVideo === 'function') {
-            playerRef.current.playVideo();
+    fetch(`/api/ai/${videoId}/topics/${encodeURIComponent(activeM.topicName)}/answer`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ studentAnswer: normalizedInput, questionType: 'feynman' })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success && data.score >= 50) {
+        setSuccessMsg(`Excellent! Score: ${data.score}/100. ${data.feedback}`);
+        setTimeout(() => {
+          if (currentQuestionIndex + 1 < activeM.questions.length) {
+            setCurrentQuestionIndex(prev => prev + 1);
+            setVoiceInput("");
+            setSuccessMsg("");
+          } else {
+            setCompletedMilestones(prev => [...prev, lockedMilestoneIndex]);
+            setLocked(false);
+            setLockedMilestoneIndex(-1);
+            setCurrentQuestionIndex(0);
+            setVoiceInput("");
+            setSuccessMsg("");
+            if (playerRef.current && typeof playerRef.current.playVideo === 'function') {
+              playerRef.current.playVideo();
+            }
           }
-        }
-      }, 2000);
-    } else {
-      setVoiceError(`Answer did not mention required terms. Make sure to talk about concepts like: ${currentQ.keywords.join(", ")}`);
-    }
+        }, 3000);
+      } else {
+        setVoiceError(`Needs improvement (Score: ${data?.score || 0}/100). ${data?.feedback || 'Try again.'}`);
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      setVoiceError("Network error. Please try again.");
+    });
   };
 
   const skipMilestone = () => {

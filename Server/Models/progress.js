@@ -77,9 +77,12 @@ competencyScore: {
 
 const progressSchema = new mongoose.Schema(
   {
+    userId: {
+      type: String,
+      default: "anonymous",
+    },
     sessionId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Session",
+      type: String,
       required: true,
     },
 

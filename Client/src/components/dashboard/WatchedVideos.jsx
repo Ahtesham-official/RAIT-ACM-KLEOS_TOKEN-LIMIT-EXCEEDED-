@@ -81,8 +81,9 @@ const watchedTutorials = [
   }
 ];
 
-export default function WatchedVideos({ theme }) {
-  const [selectedId, setSelectedId] = useState(watchedTutorials[0].id);
+export default function WatchedVideos({ theme, dashboardData }) {
+  const watchedTutorials = dashboardData?.recentSessions || [];
+  const [selectedId, setSelectedId] = useState(watchedTutorials.length > 0 ? watchedTutorials[0].id : null);
   const navigate = useNavigate();
 
   const activeTutorial = watchedTutorials.find(t => t.id === selectedId);
@@ -147,7 +148,7 @@ export default function WatchedVideos({ theme }) {
         {/* Right column: Capstone Project Card (7 cols) */}
         <div className="md:col-span-7">
           {activeTutorial ? (
-            <div className={`h-full flex flex-col p-5 rounded-2xl border transition-all duration-500 animate-fadeIn ${
+            <div className={`h-full flex flex-col p-5 rounded-2xl border transition-all duration-500 animate-fadeIn overflow-y-auto custom-scrollbar ${
               theme === 'dark'
                 ? 'bg-slate-950/50 border-slate-900/80 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]'
                 : 'bg-slate-50/60 border-slate-100 shadow-sm'
@@ -160,26 +161,26 @@ export default function WatchedVideos({ theme }) {
                       CAPSTONE PROJECT
                     </span>
                     <h4 className="text-sm font-black tracking-tight mt-0.5">
-                      {activeTutorial.capstone.title}
+                      {activeTutorial.title} Capstone
                     </h4>
                   </div>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${activeTutorial.capstone.badgeColor}`}>
-                    {activeTutorial.capstone.difficulty}
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 text-emerald-500 bg-emerald-500/10 border-emerald-500/20`}>
+                    Score: {activeTutorial.capstoneScore}%
                   </span>
                 </div>
 
                 {/* Description */}
                 <p className="text-xs text-slate-400 leading-relaxed font-medium mb-5">
-                  {activeTutorial.capstone.description}
+                  Complete the dynamically generated topics for this video tutorial to increase your overall competency score.
                 </p>
 
                 {/* Checklist */}
                 <div className="space-y-2.5">
                   <span className="text-[9px] font-bold font-mono text-slate-400 uppercase tracking-wider block">
-                    PROJECT TASKS
+                    TASKS GIVEN BY MENTOR
                   </span>
                   <ul className="space-y-2">
-                    {activeTutorial.capstone.tasks.map((task, idx) => (
+                    {activeTutorial.tasks && activeTutorial.tasks.map((task, idx) => (
                       <li key={idx} className="flex items-center gap-2.5 text-[11px] font-bold text-slate-300">
                         <CheckCircle2 className="w-3.5 h-3.5 text-violet-500 shrink-0" />
                         <span className={theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}>{task}</span>

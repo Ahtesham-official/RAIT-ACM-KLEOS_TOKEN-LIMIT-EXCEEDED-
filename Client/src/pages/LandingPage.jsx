@@ -19,6 +19,8 @@ export default function LandingPage({ authView, setAuthView, showPassword, setSh
   console.log("Supabase Connected:", supabase);
   const navigate = useNavigate();
   const containerRef = useRef(null);
+  const backendReadyRef = useRef(false);
+  const derivedIdRef = useRef('');
   
   const [videoUrl, setVideoUrl] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -42,30 +44,18 @@ export default function LandingPage({ authView, setAuthView, showPassword, setSh
           if (prev < pipelineSteps.length - 1) {
             return prev + 1;
           } else {
-            // Processing Sequence Complete -> Trigger Route Change
-            clearInterval(interval);
-            setTimeout(() => {
-              setIsProcessing(false);
-              
-              let derivedId = "default-video"; 
-              try {
-                if (videoUrl.includes("v=")) {
-                  derivedId = videoUrl.split("v=")[1].split("&")[0];
-                } else if (videoUrl.includes("youtu.be/")) {
-                  derivedId = videoUrl.split("youtu.be/")[1].split("?")[0];
-                }
-              } catch (err) {
-                console.error("Error parsing video ID", err);
-              }
-
-              setVideoUrl('');
-              // Route user cleanly to their learning workspace
-              navigate(`/workspace/${derivedId}`);
-            }, 800);
+            if (backendReadyRef.current) {
+              clearInterval(interval);
+              setTimeout(() => {
+                setIsProcessing(false);
+                setVideoUrl('');
+                navigate(`/workspace/${derivedIdRef.current}`);
+              }, 800);
+            }
             return prev;
           }
         });
-      }, 1200); // 1.2 seconds per feedback tick looks ideal
+      }, 1200); 
     }
     return () => clearInterval(interval);
   }, [isProcessing, videoUrl, navigate, pipelineSteps.length]);
@@ -130,6 +120,47 @@ export default function LandingPage({ authView, setAuthView, showPassword, setSh
             if(videoUrl.trim()) { 
               setCurrentStep(0); 
               setIsProcessing(true); 
+              backendReadyRef.current = false;
+
+              let derivedId = "default-video"; 
+              try {
+                if (videoUrl.includes("v=")) {
+                  derivedId = videoUrl.split("v=")[1].split("&")[0];
+                } else if (videoUrl.includes("youtu.be/")) {
+                  derivedId = videoUrl.split("youtu.be/")[1].split("?")[0];
+                }
+              } catch (err) {
+                console.error("Error parsing video ID", err);
+              }
+              derivedIdRef.current = derivedId;
+
+              const getUserId = async () => {
+                const { data } = await supabase.auth.getSession();
+                return data?.session?.user?.id || 'anonymous';
+              };
+
+              getUserId().then(userId => {
+                fetch('/api/ai/generate', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ sessionId: derivedId, youtubeUrl: videoUrl, userId })
+                })
+                .then(res => res.json())
+                .then(data => {
+                  if(data.success) {
+                    backendReadyRef.current = true;
+                  } else {
+                    console.error(data.error);
+                    alert("Error processing video: " + data.error);
+                    setIsProcessing(false);
+                  }
+                })
+                .catch(err => {
+                  console.error(err);
+                  alert("Failed to connect to the server.");
+                  setIsProcessing(false);
+                });
+              });
             } 
           }} 
           theme={theme} 

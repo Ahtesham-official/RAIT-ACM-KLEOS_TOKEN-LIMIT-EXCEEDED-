@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 const sessionSchema = new mongoose.Schema(
   {
+    userId: {
+      type: String,
+      default: "anonymous",
+    },
     videoUrl: {
       type: String,
       required: true,

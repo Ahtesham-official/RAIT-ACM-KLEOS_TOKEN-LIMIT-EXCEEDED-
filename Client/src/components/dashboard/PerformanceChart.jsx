@@ -1,14 +1,32 @@
 import React from 'react';
 
-export default function PerformanceChart({ theme }) {
-  const points = [
-    { label: "Apr 20", score: 65, avg: 50 },
-    { label: "Apr 27", score: 72, avg: 55 },
-    { label: "May 4", score: 58, avg: 45 },
-    { label: "May 11", score: 80, avg: 60 },
-    { label: "May 18", score: 75, avg: 62 },
-    { label: "May 24", score: 88, avg: 66 }
-  ];
+export default function PerformanceChart({ theme, dashboardData }) {
+  const chartData = dashboardData?.chartData || [];
+  
+  // Format dates for labels
+  const points = chartData.map(c => ({
+    label: new Date(c.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    score: c.score || 0,
+    avg: 50 // Placeholder average for reference
+  }));
+
+  // Fallback if no data
+  if (points.length === 0) {
+    points.push({ label: "N/A", score: 0, avg: 0 });
+  }
+
+  const svgWidth = 600;
+  const svgHeight = 160;
+  
+  const generatePolyline = (dataPoints) => {
+    if (dataPoints.length === 1) return `0,${svgHeight - (dataPoints[0].score * (svgHeight / 100))} 600,${svgHeight - (dataPoints[0].score * (svgHeight / 100))}`;
+    const step = svgWidth / (dataPoints.length - 1);
+    return dataPoints.map((p, i) => {
+      const x = i * step;
+      const y = svgHeight - (p.score * (svgHeight / 100));
+      return `${x},${y}`;
+    }).join(" ");
+  };
 
   return (
     <div className={`p-6 rounded-2xl border flex flex-col justify-between w-full min-w-0 transition-colors ${
@@ -40,13 +58,15 @@ export default function PerformanceChart({ theme }) {
         </div>
 
         <svg viewBox="0 0 600 160" className="absolute inset-x-4 bottom-6 w-[calc(100%-2rem)] h-36 overflow-visible pointer-events-none">
-          {/* User Score Curve Line */}
-          <path d="M 10 110 Q 110 90 220 120 T 440 60 T 590 30" fill="none" stroke="#8b5cf6" strokeWidth="3" strokeLinecap="round" />
-          <circle cx="590" cy="30" r="4" fill="#8b5cf6" />
+          {/* User Score Polyline */}
+          <polyline points={generatePolyline(points)} fill="none" stroke="#8b5cf6" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
           
-          {/* Average Curve Line */}
-          <path d="M 10 130 Q 110 120 220 140 T 440 100 T 590 80" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4 4" strokeLinecap="round" />
-          <circle cx="590" cy="80" r="4" fill="#f59e0b" />
+          {points.map((p, i) => {
+            const step = points.length === 1 ? 0 : 600 / (points.length - 1);
+            const cx = i * step;
+            const cy = 160 - (p.score * 1.6);
+            return <circle key={i} cx={cx} cy={cy} r="4" fill="#8b5cf6" />;
+          })}
         </svg>
 
         {points.map((p, i) => (

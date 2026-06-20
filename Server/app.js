@@ -6,8 +6,10 @@ const dashboardRoutes = require("./Routes/dashboardRoutes");
 const topicRoutes = require("./Routes/topicRoutes");
 const apiRoutes = require("./Routes/api.route.js");
 
-app.use(express.json());
+const cors = require('cors');
 
+app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+app.use(express.json());
 app.get("/", (req, res) => {
     res.send("Hello Praxis");
 });

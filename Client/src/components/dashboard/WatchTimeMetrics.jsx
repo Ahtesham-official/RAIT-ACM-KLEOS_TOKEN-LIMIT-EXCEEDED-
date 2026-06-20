@@ -1,12 +1,17 @@
 import React from 'react';
 import { Clock } from 'lucide-react';
 
-const limits = [
-  { label: "This Week", value: "5h 20m", progress: 35, color: "bg-violet-600" },
-  { label: "This Month", value: "22h 40m", progress: 68, color: "bg-emerald-500" }
-];
+export default function WatchTimeMetrics({ theme, dashboardData }) {
+  const data = dashboardData || { totalWatchMinutes: 0 };
+  const h = Math.floor(data.totalWatchMinutes / 60);
+  const m = data.totalWatchMinutes % 60;
+  
+  const limits = [
+    { label: "Overall Watch Time", value: `${h}h ${m}m`, progress: Math.min((data.totalWatchMinutes / 600) * 100, 100), color: "bg-violet-600" },
+    { label: "Topics Completion", value: `${dashboardData?.totalTopicsCount || 0} topics`, progress: Math.min(((dashboardData?.totalTopicsCount || 0) / 50) * 100, 100), color: "bg-emerald-500" }
+  ];
 
-export default function WatchTimeMetrics({ theme }) {
+
   return (
     <div className="w-full space-y-3">
       <h2 className="text-xs font-bold tracking-wider font-mono text-slate-400 uppercase">// AVERAGE WATCH TIME</h2>

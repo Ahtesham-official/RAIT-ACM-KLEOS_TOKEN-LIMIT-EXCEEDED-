@@ -8,18 +8,25 @@ const {
 
 const { transcribeAudio } = require("../Services/speech.service.js");
 const Progress = require("../Models/Progress.js");
+const Session = require("../Models/Session.js");
 
 /* -------------------- GENERATE SESSION -------------------- */
 
 async function generateSessionContent(req, res) {
   try {
-    const { sessionId, youtubeUrl } = req.body;
+    const { sessionId, youtubeUrl, userId, title } = req.body;
 
-    if (!sessionId || !youtubeUrl) {
+    if (!sessionId || !youtubeUrl || !userId) {
       return res.status(400).json({
-        error: "sessionId and youtubeUrl are required"
+        error: "sessionId, youtubeUrl, and userId are required"
       });
     }
+
+    const sessionRecord = await Session.create({
+      userId,
+      videoUrl: youtubeUrl,
+      title: title || "Tutorial Video",
+    });
 
     const transcript = await getTranscriptFromYouTube(youtubeUrl);
     const topics = await generateTopics(transcript);
@@ -42,6 +49,7 @@ async function generateSessionContent(req, res) {
     }));
 
     const progress = await Progress.create({
+      userId,
       sessionId,
       topics: progressTopics,
       capstoneScore: null,
