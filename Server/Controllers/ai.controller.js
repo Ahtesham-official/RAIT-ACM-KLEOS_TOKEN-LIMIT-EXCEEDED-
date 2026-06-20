@@ -7,7 +7,7 @@ const {
 } = require("../Services/ai.service.js");
 
 const { transcribeAudio } = require("../Services/speech.service.js");
-const Progress = require("../Models/Progress.js");
+const Progress = require("../Models/progress.js");
 const Session = require("../Models/Session.js");
 
 /* -------------------- GENERATE SESSION -------------------- */
